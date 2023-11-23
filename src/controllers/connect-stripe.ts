@@ -63,8 +63,9 @@ export async function connectStripe(req) {
     
   // If not setup
   try {
+    const { source, ...stripeOptions } = req.body
     const account = await stripeBase.createStoreAccount(user, {
-      ...req.body,
+      ...stripeOptions,
       business_type: req.body.business_type || "individual",
     })
   
@@ -77,7 +78,7 @@ export async function connectStripe(req) {
     const accountOnBoardingResponse = await stripeBase.createAccountOnBoardingLink(
       {
           accountId: account.id,
-          source: req.body.source,
+          source: source,
       }
     );
   

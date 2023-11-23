@@ -68,9 +68,13 @@ const CustomSettingPage = ({notify}: SettingProps) => {
       business_type: businessType,
     }, {
       onSuccess: (data) => {
-        notify.success("Setup Successful", "You will be redirected to stripe to complete the setup.")
         if (data.data.link) {
+          notify.success("Setup Successful", "You will be redirected to stripe to complete the setup.")
           window.location.href = data.data.link
+        } else if(data.data.status === "success") {
+          notify.success("Setup Successful", "You can now accept payments.")
+        } else {
+          notify.error("Setup Failed", "Something went wrong. Please try again.")
         }
       },
     })
