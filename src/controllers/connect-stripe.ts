@@ -23,46 +23,45 @@ export async function connectStripe(req) {
     }
   }
 
-  // If setup but not complete
-  if (store.c_stripe_account_id) {
-    // Check first if charges enabled
-    const account = await stripeBase.retrieveAccount(store.c_stripe_account_id)
-    if (account.charges_enabled) {
-      store.c_stripe_account_enabled = true
-      await storeRepository.save(store)
-      return {
-        status: "success",
-        account_id: store.c_stripe_account_id,
-        account_enabled: store.c_stripe_account_enabled,
-      }
-    } else {
-        // Create stripe onboarding response
-        const accountOnBoardingResponse = await stripeBase.createAccountOnBoardingLink(
-            {
-                accountId: account.id,
-                source: req.body.source,
-            }
-        );
-    
-        if (!accountOnBoardingResponse) {
-          return {
-            status: 'error',
-            message: 'Stripe onboarding failed'
-          }
-        }
-    
-        return {
-            status: "success",
-            account_id: store.c_stripe_account_id,
-            account_enabled: store.c_stripe_account_enabled,
-            link: accountOnBoardingResponse.url,
-        }
-    }
-  }
-  
-    
-  // If not setup
   try {
+    // If setup but not complete
+    if (store.c_stripe_account_id) {
+      // Check first if charges enabled
+      const account = await stripeBase.retrieveAccount(store.c_stripe_account_id)
+      if (account.charges_enabled) {
+        store.c_stripe_account_enabled = true
+        await storeRepository.save(store)
+        return {
+          status: "success",
+          account_id: store.c_stripe_account_id,
+          account_enabled: store.c_stripe_account_enabled,
+        }
+      } else {
+          // Create stripe onboarding response
+          const accountOnBoardingResponse = await stripeBase.createAccountOnBoardingLink(
+              {
+                  accountId: account.id,
+                  source: req.body.source,
+              }
+          );
+      
+          if (!accountOnBoardingResponse) {
+            return {
+              status: 'error',
+              message: 'Stripe onboarding failed'
+            }
+          }
+      
+          return {
+              status: "success",
+              account_id: store.c_stripe_account_id,
+              account_enabled: store.c_stripe_account_enabled,
+              link: accountOnBoardingResponse.url,
+          }
+      }
+    }
+    
+    // If not setup
     const { source, ...stripeOptions } = req.body
     const account = await stripeBase.createStoreAccount(user, {
       ...stripeOptions,
