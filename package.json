@@ -1,5 +1,5 @@
 {
-  "name": "medusa-marketplace",
+  "name": "medusa-plugin-marketplace",
   "version": "0.0.1",
   "description": "Marketplace extension for Medusa JS.",
   "author": "Salako Noah Inioluwa <slaknoah@gmail.com>",
