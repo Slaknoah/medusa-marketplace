@@ -5,7 +5,6 @@ import { ConfigModule } from "@medusajs/medusa/dist/types/global";
 import { UserRoles, authenticate, wrapHandler, registerOverriddenValidators } from "@medusajs/medusa";
 import { registerLoggedInUser } from "./middlewares/logged-in-user";
 import { IsEmail, IsEnum } from "class-validator";
-import { setStoreId } from "./middlewares/set-store-id";
 import { attachAdminRoutes } from "./routes/admin";
 import bodyParser from "body-parser";
 import { attachStoreRoutes } from "./routes/store";
@@ -35,6 +34,7 @@ export class AdminPostInvitesReq {
   role: UserRoles;
 }
 
+// TODO: this needs some cleanup
 export default (rootDirectory) => {
   const {
     configModule: { projectConfig },
@@ -79,12 +79,6 @@ export default (rootDirectory) => {
     maybe(authenticate()),
     maybe(registerLoggedInUser()),
   ];
-  // router.use("/admin/products*", commonMiddleware);
-  // router.use("/admin/users*", commonMiddleware);
-  // router.use("/admin/orders*", commonMiddleware);
-
-  // Store cors
-  // router.use("/store/*", cors(storeCorsOptions), setStoreId());
 
    // Set up root routes for store and admin endpoints, with appropriate CORS settings
    router.use("/store", cors(storeCorsOptions), bodyParser.json());
