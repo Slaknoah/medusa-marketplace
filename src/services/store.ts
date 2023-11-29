@@ -3,7 +3,6 @@ import { MedusaError } from "medusa-core-utils";
 import { Lifetime } from "awilix"
 
 import { StoreService as MedusaStoreService } from "@medusajs/medusa";
-import StoreRepository from "../repositories/store";
 
 class StoreService extends MedusaStoreService {
   // The default life time for a core service is SINGLETON
