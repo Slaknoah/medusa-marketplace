@@ -32,6 +32,8 @@
   },
   "dependencies": {
     "@medusajs/admin": "7.1.7",
+    "@medusajs/cache-inmemory": "^1.8.10",
+    "@medusajs/event-bus-local": "^1.9.7",
     "@medusajs/medusa": "1.17.4",
     "@medusajs/ui": "^1.0.0",
     "@tanstack/react-query": "4.22.0",

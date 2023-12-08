@@ -84,7 +84,7 @@ export default (rootDirectory) => {
    router.use("/store", cors(storeCorsOptions), bodyParser.json());
    router.use("/admin", cors(adminCorsOptions), bodyParser.json());
  
-   // Add authentication to all admin routes *except* auth and account invite ones
+  // Add authentication to all admin routes *except* auth and account invite ones
    router.use(
      /\/admin\/((?!auth)(?!invites)(?!users\/reset-password)(?!users\/password-token).*)/,
      authenticate(),

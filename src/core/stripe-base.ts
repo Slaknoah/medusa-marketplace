@@ -33,7 +33,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
   protected constructor(_, options) {
     super(_, options)
 
-    this.options_ = options.stripe;
+    this.options_ = options.stripe || options.projectConfig.stripe;
     this.cartService = _.cartService
     this.lineItemService = _.lineItemService
 
