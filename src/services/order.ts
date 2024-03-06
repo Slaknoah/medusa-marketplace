@@ -9,6 +9,15 @@ import { Lifetime } from "awilix"
 
 import { OrderService as MedusaOrderService } from "@medusajs/medusa/dist/services";
 
+type OrderSelector = {
+  store_id?: string;
+} & Selector<Order>;
+
+type OrderQuerySelector = {
+  store_id?: string;
+  order_parent_id?: string;
+} & QuerySelector<Order>;
+
 class OrderService extends MedusaOrderService {
   // The default life time for a core service is SINGLETON
   static LIFE_TIME = Lifetime.SCOPED
@@ -31,7 +40,7 @@ class OrderService extends MedusaOrderService {
   }
 
   list(
-    selector: Selector<Order>,
+    selector: OrderSelector,
     config?: FindConfig<Order>
   ): Promise<Order[]> {
     if (this.loggedInUser_?.role === "admin") {
@@ -46,7 +55,7 @@ class OrderService extends MedusaOrderService {
   }
 
   listAndCount(
-    selector: QuerySelector<Order>,
+    selector: OrderQuerySelector,
     config: FindConfig<Order> = {
       skip: 0,
       take: 50,
