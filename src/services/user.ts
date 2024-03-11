@@ -4,8 +4,8 @@ import {
   FilterableUserProps,
   CreateUserInput as MedusaCreateUserInput,
 } from "@medusajs/medusa/dist/types/user";
-import StoreRepository from "../repositories/store";
 import * as crypto from "crypto";
+import StoreRepository from "@medusajs/medusa/dist/repositories/store";
 
 type CreateUserInput = {
   store_id?: string;

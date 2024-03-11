@@ -1,6 +1,6 @@
 import { UserService } from "@medusajs/medusa"
+import StoreRepository from "@medusajs/medusa/dist/repositories/store"
 import StripeBase from "src/core/stripe-base"
-import StoreRepository from 'src/repositories/store';
 
 
 export async function connectStripe(req) {
