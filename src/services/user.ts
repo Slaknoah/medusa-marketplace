@@ -1,11 +1,12 @@
 import { Lifetime } from "awilix";
-import { User, UserService as MedusaUserService, SalesChannelService } from "@medusajs/medusa";
+import { User, UserService as MedusaUserService, SalesChannelService, Store } from "@medusajs/medusa";
 import {
   FilterableUserProps,
   CreateUserInput as MedusaCreateUserInput,
 } from "@medusajs/medusa/dist/types/user";
 import * as crypto from "crypto";
 import StoreRepository from "@medusajs/medusa/dist/repositories/store";
+import CurrencyRepository from "@medusajs/medusa/dist/repositories/currency";
 
 type CreateUserInput = {
   store_id?: string;
@@ -34,19 +35,12 @@ class UserService extends MedusaUserService {
     }
   }
 
-  async create(user: CreateUserInput, password: string): Promise<User> {
+  async create(user: CreateUserInput, password: string, storeDetails?: Partial<Store>): Promise<User> {
     // Create store if missing
     if (!user.store_id) {
       const storeRepo = this.manager_.withRepository(this.storeRepository_);
 
-      // Setup new store with default sales channel
-      // const salesChannel = await this.salesChannelService_.create({
-      //   name: "Store Default",
-      // });
-      // const data = {
-      //   default_sales_channel_id: salesChannel.id,
-      // };
-      let newStore = storeRepo.create();
+      let newStore = storeRepo.create(storeDetails);
       newStore = await storeRepo.save(newStore);
       user.store_id = newStore.id;
     }
