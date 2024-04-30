@@ -1,6 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
 
-import { Product as MedusaProduct } from "@medusajs/medusa/dist";
+import { Product as MedusaProduct } from "@medusajs/medusa";
 import { Store } from "./store";
 
 @Entity()

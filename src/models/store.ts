@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, OneToMany } from "typeorm";
 
 import { Invite } from "./invite";
-import { Store as MedusaStore } from "@medusajs/medusa/dist";
+import { Store as MedusaStore } from "@medusajs/medusa";
 import { Order } from "./order";
 import { Product } from "./product";
 import { Role } from "./role";

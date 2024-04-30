@@ -61,6 +61,7 @@ export default (rootDirectory) => {
     "/admin/invites/accept": ["POST"],
     "/admin/users/password-token": ["POST"],
     "/admin/users/reset-password": ["POST"],
+    "/admin/store/stripe/connect-complete": ["GET"],
   };
   const maybe = (fn) => {
     return function (req, res, next) {
@@ -86,7 +87,7 @@ export default (rootDirectory) => {
  
   // Add authentication to all admin routes *except* auth and account invite ones
    router.use(
-     /\/admin\/((?!auth)(?!invites)(?!users\/reset-password)(?!users\/password-token).*)/,
+     /\/admin\/((?!auth)(?!invites)(?!store\/stripe\/connect-complete)(?!users\/reset-password)(?!users\/password-token).*)/,
      authenticate(),
      registerLoggedInUser(),
    );
