@@ -118,8 +118,6 @@ export default (rootDirectory) => {
   router.get(
     '/admin/store/stripe/connect-complete',
     cors(adminCorsOptions),
-    authenticate(),
-    registerLoggedInUser(),
     completeStripeConnect,
   )
 

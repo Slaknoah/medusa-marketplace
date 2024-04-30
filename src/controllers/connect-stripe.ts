@@ -139,11 +139,10 @@ export async function completeStripeConnect(req, res) {
 
     const storeRepository: typeof StoreRepository = req.scope.resolve("storeRepository")
 
-    const store = await storeRepository.update(account.metadata.store_id, {
+    await storeRepository.update(account.metadata.store_id, {
         c_stripe_account_enabled: true,
         c_stripe_account_id: account.id,
     })
-    console.log("store", store)
     if (source) {
         return res.redirect(`${source}?success=stripe_account_enabled`)
     }
