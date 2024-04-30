@@ -384,7 +384,9 @@ abstract class StripeBase extends AbstractPaymentProcessor {
   }) {
     return this.stripe_.accountLinks.create({
       account: accountId,
-      refresh_url: `${this.options_.app_url}/admin/store/stripe/connect-refresh?accountId=${accountId}`,
+      refresh_url: `${this.options_.app_url}/admin/store/stripe/connect-complete?accountId=${accountId}&source=${
+        source || ""
+      }`,
       return_url: `${this.options_.app_url}/admin/store/stripe/connect-complete?accountId=${accountId}&source=${
         source || ""
       }`,

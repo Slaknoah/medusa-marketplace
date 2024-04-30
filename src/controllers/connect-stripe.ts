@@ -154,3 +154,33 @@ export async function completeStripeConnect(req, res) {
         },
     });
 }
+
+export async function refreshStripeConnect(req, res) {
+    const { accountId, source = '' } = req.query
+    const stripeBase: StripeBase = req.scope.resolve("stripeProviderService")
+
+    const account = await stripeBase.retrieveAccount(accountId)
+
+    if (!account || !account.metadata.store_id) {
+      // Redirect to sourceUrl adding error query param
+      return res.redirect(`${source}?error=stripe_account_not_found`)
+    }
+
+    if (!account.charges_enabled) {
+      // Create stripe onboarding response
+      const accountOnBoardingResponse = await stripeBase.createAccountOnBoardingLink(
+          {
+              accountId: account.id,
+              source: source,
+          }
+      );
+
+      if (!accountOnBoardingResponse) {
+        return res.redirect(`${source}?success=stripe_refresh_failed`)
+      }
+
+      return res.redirect(accountOnBoardingResponse.url);
+    }
+
+    return res.redirect(`${source}?success=stripe_account_enabled`)
+}

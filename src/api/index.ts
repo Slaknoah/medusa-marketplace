@@ -15,7 +15,7 @@ import {  getStripePayments } from "../controllers/get-payments"
 import hooks from "./hooks"
 
 import { IsString, IsOptional } from "class-validator"
-import { completeStripeConnect, connectStripe } from "../controllers/connect-stripe";
+import { completeStripeConnect, connectStripe, refreshStripeConnect } from "../controllers/connect-stripe";
 
 class StoreGetProductsParams extends MedusaStoreGetProductsParams {
   @IsString()
@@ -62,6 +62,7 @@ export default (rootDirectory) => {
     "/admin/users/password-token": ["POST"],
     "/admin/users/reset-password": ["POST"],
     "/admin/store/stripe/connect-complete": ["GET"],
+    "/admin/store/stripe/connect-refresh": ["GET"],
   };
   const maybe = (fn) => {
     return function (req, res, next) {
@@ -87,7 +88,7 @@ export default (rootDirectory) => {
  
   // Add authentication to all admin routes *except* auth and account invite ones
    router.use(
-     /\/admin\/((?!auth)(?!invites)(?!store\/stripe\/connect-complete)(?!users\/reset-password)(?!users\/password-token).*)/,
+     /\/admin\/((?!auth)(?!invites)(?!store\/stripe\/connect-complete)(?!store\/stripe\/connect-refresh)(?!users\/reset-password)(?!users\/password-token).*)/,
      authenticate(),
      registerLoggedInUser(),
    );
@@ -120,6 +121,11 @@ export default (rootDirectory) => {
     '/admin/store/stripe/connect-complete',
     cors(adminCorsOptions),
     completeStripeConnect,
+  )
+  router.get(
+    '/admin/store/stripe/connect-refresh',
+    cors(adminCorsOptions),
+    refreshStripeConnect,
   )
 
   router.get(
