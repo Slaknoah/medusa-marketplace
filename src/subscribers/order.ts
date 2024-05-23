@@ -11,6 +11,7 @@ import {
 
 import { EntityManager, Repository } from "typeorm";
 import ProductService from "../services/product";
+import { StripeOptions } from "src/types/stripe";
 
 type InjectedDependencies = {
   eventBusService: EventBusService;
@@ -31,6 +32,8 @@ class OrderSubscriber {
   private readonly productService: ProductService;
   private readonly lineItemRepository: Repository<LineItem>;
   private readonly shippingMethodRepository: Repository<ShippingMethod>;
+  private readonly paymentRepository: Repository<Payment>;
+  protected readonly stripeOptions_: StripeOptions
 
   constructor({
     eventBusService,
@@ -41,7 +44,7 @@ class OrderSubscriber {
     lineItemRepository,
     shippingMethodRepository,
     paymentRepository,
-  }: InjectedDependencies) {
+  }: InjectedDependencies, options) {
     this.eventBusService = eventBusService;
     this.orderService = orderService;
     this.orderRepository = orderRepository;
@@ -49,6 +52,9 @@ class OrderSubscriber {
     this.manager = manager;
     this.lineItemRepository = lineItemRepository;
     this.shippingMethodRepository = shippingMethodRepository;
+    this.paymentRepository = paymentRepository;
+
+    this.stripeOptions_ = options.stripe || options.projectConfig.stripe;
 
     this.eventBusService.subscribe(
       OrderService.Events.PLACED,
@@ -82,6 +88,7 @@ class OrderSubscriber {
         "payments",
       ],
     })) as any;
+
     //group items by store id
     const groupedItems = {};
 
@@ -106,7 +113,16 @@ class OrderSubscriber {
     const shippingMethodRepo = this.manager.withRepository(
       this.shippingMethodRepository
     );
+    const paymentRepository = this.manager.withRepository(
+      this.paymentRepository
+    );
 
+    // Throw error if more than one store is found and payment provider is stripe
+    const isStripe = order.payments.some((payment) => payment.provider_id === "stripe");
+    if (Object.keys(groupedItems).length > 1 && isStripe) {
+      throw new Error("Multiple stores cart not supported with stripe payments at the moment");
+    }
+    
     for (const store_id in groupedItems) {
       //create order
       const childOrder = orderRepo.create({
@@ -144,6 +160,33 @@ class OrderSubscriber {
         });
         await lineItemRepo.save(newItem);
       }
+
+      // Create payments
+
+      // TODO: implement once multiple shipping methods are supported and multistore cart is supported
+      const shipping_price = 0;
+      const total = items.reduce((acc, item) => {
+        return acc + item.quantity * item.unit_price;
+      }, 0) + shipping_price;
+
+      for (const payment of order.payments) {
+        const newPayment = paymentRepository.create({
+          ...payment,
+          id: null,
+          order_id: orderResult.id,
+          cart_id: null,
+          cart: null,
+          // TODO: enable once above is implemented
+          // amount: total,
+        });
+
+        await this.manager.withRepository(this.paymentRepository).save(newPayment);
+      }
+    }
+
+    // auto-capture payment, we do this last because we want to capture payment  on previously created payments on child orders
+    if (order.payment_status !== "captured" && this.stripeOptions_.capture) {
+      await this.orderService.capturePayment(order.id)
     }
   }
 
@@ -162,7 +205,6 @@ class OrderSubscriber {
       );
 
       const newStatus = this.getStatusFromChildren(parentOrder as any) as any;
-      console.log("handling new status", newStatus);
       if (newStatus !== parentOrder.status) {
         switch (newStatus) {
           case OrderStatus.CANCELED:

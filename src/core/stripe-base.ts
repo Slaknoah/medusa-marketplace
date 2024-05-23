@@ -109,7 +109,6 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       customer,
     } = context
 
-    console.log(context)
     const lineItems = await this.lineItemService.list({
       cart_id: resource_id,
     }, {
@@ -125,9 +124,11 @@ abstract class StripeBase extends AbstractPaymentProcessor {
         )
       )
     }
+
+    // We pick store from line items because currently we only allow
+    // one store per cart
     const store = lineItems[0].variant.product.store as Store
     const accountId = store?.c_stripe_account_id ? store?.c_stripe_account_id : undefined
-    console.log(store)
     
     if (!accountId) {
       return this.buildError(
@@ -303,7 +304,6 @@ abstract class StripeBase extends AbstractPaymentProcessor {
     context: PaymentProcessorContext
   ): Promise<PaymentProcessorError | PaymentProcessorSessionResponse | void> {
     const { amount, customer, paymentSessionData } = context
-    console.log(context)
     const stripeId = customer?.metadata?.stripe_id
 
     if (stripeId !== paymentSessionData.customer) {
