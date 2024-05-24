@@ -87,21 +87,8 @@ class OrderSubscriber {
   }
 
   private async handlePaymentCaptured({ id }: { id: string }): Promise<void> {
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
     console.log('payment captured', id)
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
-    console.log('---------')
+
     //Update related payments objects
     //retrieve order
     const order: Order = (await this.orderService.retrieve(id, {
@@ -112,7 +99,7 @@ class OrderSubscriber {
       ],
     }));
 
-    const orderRepository = this.manager.withRepository(this.orderRepository);
+    const paymentRepository = this.manager.withRepository(this.paymentRepository);
 
     // Update all children payments to be captured
     const updates = [];
@@ -121,14 +108,13 @@ class OrderSubscriber {
         if (childPayment.captured_at === null) {
           childPayment.captured_at = new Date().toISOString();
           updates.push(
-            orderRepository.save(childPayment)
+            paymentRepository.save(childPayment)
           )
         }
       }
     }
 
     await Promise.all(updates);
-    console.log('---------', "Payment capture handled");
   }
 
   private async handleOrderPlaced({ id }: { id: string }): Promise<void> {
@@ -234,7 +220,6 @@ class OrderSubscriber {
           // TODO: enable once above is implemented
           // amount: total,
         });
-        console.log(newPayment, 'newPayment')
 
         await this.manager.withRepository(this.paymentRepository).save(newPayment);
       }
