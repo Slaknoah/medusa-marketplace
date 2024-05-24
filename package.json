@@ -1,6 +1,6 @@
 {
   "name": "medusa-plugin-marketplace",
-  "version": "0.0.19",
+  "version": "0.0.22",
   "description": "Marketplace extension for Medusa JS.",
   "author": "Salako Noah Inioluwa <slaknoah@gmail.com>",
   "license": "MIT",
@@ -33,6 +33,7 @@
   "dependencies": {
     "@medusajs/admin": "^7.1.11",
     "@medusajs/cache-inmemory": "^1.8.10",
+    "@medusajs/event-bus-local": "^1.9.8",
     "@medusajs/medusa": "1.20",
     "@medusajs/ui": "^2.4.1",
     "@tanstack/react-query": "4.22.0",
@@ -41,6 +42,7 @@
     "cors": "^2.8.5",
     "dotenv": "16.0.3",
     "express": "^4.17.2",
+    "medusa-fulfillment-manual": "^1.1.40",
     "medusa-interfaces": "^1.3.8",
     "prism-react-renderer": "^2.0.4",
     "stripe": "^14.5.0",

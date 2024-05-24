@@ -147,8 +147,10 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       amount: Math.round(amount),
       currency: currency_code,
       metadata: { resource_id },
-      capture_method: this.options_.capture ? "automatic" : "manual",
+      // We do this post payment cloning so capturing happens afterwards
+      // capture_method: this.options_.capture ? "automatic" : "manual",
       ...intentRequestData,
+      capture_method: 'manual',
       on_behalf_of: accountId,
       application_fee_amount: Math.round(amount * APPLICATION_FEE_PERCENTAGE),
       transfer_data: {

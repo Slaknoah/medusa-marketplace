@@ -7,6 +7,7 @@ import {
   Product,
   ShippingMethod,
   Payment,
+  PaymentStatus,
 } from "@medusajs/medusa";
 
 import { EntityManager, Repository } from "typeorm";
@@ -100,6 +101,7 @@ class OrderSubscriber {
     }));
 
     const paymentRepository = this.manager.withRepository(this.paymentRepository);
+    const orderRepository = this.manager.withRepository(this.orderRepository);
 
     // Update all children payments to be captured
     const updates = [];
@@ -112,6 +114,10 @@ class OrderSubscriber {
           )
         }
       }
+      child.payment_status = PaymentStatus.CAPTURED;
+      updates.push(
+        orderRepository.save(child)
+      )
     }
 
     await Promise.all(updates);

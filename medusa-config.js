@@ -55,6 +55,23 @@ const projectConfig = {
   app_url: process.env.APP_URL || "http://localhost:9000",
 }
 
+if (process.env.NODE_ENV === 'development') {
+  modules.eventBus = {
+    resolve: "@medusajs/event-bus-local",
+  }
+  plugins.push("medusa-fulfillment-manual")
+  plugins.push({
+    resolve: "@medusajs/admin",
+    /** @type {import('@medusajs/admin').PluginOptions} */
+    options: {
+      autoRebuild: true,
+      develop: {
+        open: process.env.OPEN_BROWSER !== "false",
+      },
+    },
+  });
+}
+
 /** @type {import('@medusajs/medusa').ConfigModule} */
 module.exports = {
   projectConfig,

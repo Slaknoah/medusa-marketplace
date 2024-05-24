@@ -63,7 +63,7 @@ export default (rootDirectory) => {
     "/admin/users/reset-password": ["POST"],
     "/admin/store/stripe/connect-complete": ["GET"],
     "/admin/store/stripe/connect-refresh": ["GET"],
-    "/admin/stripe/hooks": ["GET"],
+    "/stripe/hooks": ["GET"],
   };
   const maybe = (fn) => {
     return function (req, res, next) {

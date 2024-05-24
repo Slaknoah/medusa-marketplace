@@ -65,6 +65,8 @@ export async function handlePaymentHook({
     paymentIntent?.metadata?.cart_id ?? paymentIntent?.metadata?.resource_id // Backward compatibility
   const resourceId = paymentIntent?.metadata?.resource_id
 
+  console.log("event.type", paymentIntent?.metadata)
+
   switch (event.type) {
     case "payment_intent.succeeded":
       try {
@@ -197,7 +199,7 @@ async function capturePaymentIfNecessary({
     .retrieveByCartId(cartId)
     .catch(() => undefined)
 
-  if (order?.payment_status !== "captured") {
+  if (order && order?.payment_status !== "captured") {
     await orderService
       .withTransaction(transactionManager)
       .capturePayment(order.id)
@@ -229,6 +231,9 @@ async function completeCartIfNecessary({
     let idempotencyKey = await idempotencyKeyServiceTx.retrieve({
       request_path: "/stripe/hooks",
       idempotency_key: eventId,
+    }).catch(() => {
+      console.error("No idempotency key found")
+      return null;
     })
 
     if (!idempotencyKey) {
