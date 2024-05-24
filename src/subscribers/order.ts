@@ -12,12 +12,14 @@ import {
 import { EntityManager, Repository } from "typeorm";
 import ProductService from "../services/product";
 import { StripeOptions } from "src/types/stripe";
+import { PaymentService } from "@medusajs/medusa/dist/services";
 
 type InjectedDependencies = {
   eventBusService: EventBusService;
   orderService: OrderService;
   orderRepository: Repository<Order>;
   productService: ProductService;
+  paymentService: PaymentService;
   manager: EntityManager;
   lineItemRepository: Repository<LineItem>;
   shippingMethodRepository: Repository<ShippingMethod>;
@@ -30,6 +32,7 @@ class OrderSubscriber {
   private readonly orderService: OrderService;
   private readonly orderRepository: Repository<Order>;
   private readonly productService: ProductService;
+  private readonly paymentService: PaymentService;
   private readonly lineItemRepository: Repository<LineItem>;
   private readonly shippingMethodRepository: Repository<ShippingMethod>;
   private readonly paymentRepository: Repository<Payment>;
@@ -44,11 +47,13 @@ class OrderSubscriber {
     lineItemRepository,
     shippingMethodRepository,
     paymentRepository,
+    paymentService,
   }: InjectedDependencies, options) {
     this.eventBusService = eventBusService;
     this.orderService = orderService;
     this.orderRepository = orderRepository;
     this.productService = productService;
+    this.paymentService = paymentService;
     this.manager = manager;
     this.lineItemRepository = lineItemRepository;
     this.shippingMethodRepository = shippingMethodRepository;
@@ -74,6 +79,56 @@ class OrderSubscriber {
       OrderService.Events.COMPLETED,
       this.checkStatus.bind(this)
     );
+
+    this.eventBusService.subscribe(
+      OrderService.Events.PAYMENT_CAPTURED,
+      this.handlePaymentCaptured.bind(this)
+    );
+  }
+
+  private async handlePaymentCaptured({ id }: { id: string }): Promise<void> {
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('payment captured', id)
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    console.log('---------')
+    //Update related payments objects
+    //retrieve order
+    const order: Order = (await this.orderService.retrieve(id, {
+      relations: [
+        "payments",
+        "children",
+        "children.payments"
+      ],
+    }));
+
+    const orderRepository = this.manager.withRepository(this.orderRepository);
+
+    // Update all children payments to be captured
+    const updates = [];
+    for (const child of order.children) {
+      for (const childPayment of child.payments) {
+        if (childPayment.captured_at === null) {
+          childPayment.captured_at = new Date().toISOString();
+          updates.push(
+            orderRepository.save(childPayment)
+          )
+        }
+      }
+    }
+
+    await Promise.all(updates);
+    console.log('---------', "Payment capture handled");
   }
 
   private async handleOrderPlaced({ id }: { id: string }): Promise<void> {
@@ -179,6 +234,7 @@ class OrderSubscriber {
           // TODO: enable once above is implemented
           // amount: total,
         });
+        console.log(newPayment, 'newPayment')
 
         await this.manager.withRepository(this.paymentRepository).save(newPayment);
       }

@@ -62,8 +62,8 @@ export async function handlePaymentHook({
   const logger = container.resolve("logger")
 
   const cartId =
-    paymentIntent.metadata.cart_id ?? paymentIntent.metadata.resource_id // Backward compatibility
-  const resourceId = paymentIntent.metadata.resource_id
+    paymentIntent?.metadata?.cart_id ?? paymentIntent?.metadata?.resource_id // Backward compatibility
+  const resourceId = paymentIntent?.metadata?.resource_id
 
   switch (event.type) {
     case "payment_intent.succeeded":
