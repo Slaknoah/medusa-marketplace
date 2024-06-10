@@ -3,15 +3,15 @@ export default async function () {
     "@medusajs/medusa/dist/api/routes/store/products/index"
   )) as any;
   imports.allowedStoreProductsFields = [
-    ...imports.allowedStoreProductsFields,
+    ...(imports.allowedStoreProductsFields || []),
     "store_id",
   ];
   (imports.defaultStoreProductsFields = [
-    ...imports.defaultStoreProductsFields,
+    ...(imports.defaultStoreProductsFields || []),
     "store_id",
   ]),
     (imports.allowedStoreProductsRelations = [
-      ...imports.allowedStoreProductsRelations,
+      ...(imports.allowedStoreProductsRelations || []),
       "store",
     ]);
 }
