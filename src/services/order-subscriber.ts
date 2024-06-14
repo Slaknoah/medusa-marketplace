@@ -134,6 +134,21 @@ class OrderSubscriberService extends BaseService {
       groupedItems[store_id].push(item);
     }
 
+    // If cart has only items from one store, do nothing, just update order store_id to the store_id of the items
+    if (Object.keys(groupedItems).length === 1) {
+      const store_id = Object.keys(groupedItems)[0];
+      if (store_id) {
+        order.store_id = store_id;
+        await this.manager.withRepository(this.orderRepository).save(order);
+
+        // auto-capture payment, we do this last because we want to capture payment  on previously created payments on child orders
+        if (order.payment_status !== "captured" && this.stripeOptions_.capture) {
+          await this.orderService.capturePayment(order.id)
+        }
+        return;
+      }
+    }
+
     const orderRepo = this.manager.withRepository(this.orderRepository);
     const lineItemRepo = this.manager.withRepository(this.lineItemRepository);
     const shippingMethodRepo = this.manager.withRepository(
