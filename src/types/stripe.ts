@@ -17,6 +17,8 @@ export interface StripeOptions {
   payment_description?: string
 
   app_url?: string
+
+  default_application_fee_multiplier?: number
 }
 
 export interface PaymentIntentOptions {

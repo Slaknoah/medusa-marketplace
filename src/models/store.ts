@@ -34,4 +34,7 @@ export class Store extends MedusaStore {
 
   @Column({ nullable: true, default: false })
   c_stripe_account_enabled: boolean;
+
+  @Column({ nullable: true })
+  application_fee_multiplier: number;
 }

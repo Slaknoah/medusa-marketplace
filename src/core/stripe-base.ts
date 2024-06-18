@@ -36,6 +36,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
     this.options_ = options.stripe || options.projectConfig.stripe;
     this.cartService = _.cartService
     this.lineItemService = _.lineItemService
+    this.options_.default_application_fee_multiplier = this.options_.default_application_fee_multiplier || APPLICATION_FEE_PERCENTAGE
 
     this.init()
   }
@@ -142,6 +143,8 @@ abstract class StripeBase extends AbstractPaymentProcessor {
 
     const description = (cart_context.payment_description ??
       this.options_?.payment_description) as string
+
+    const multiplier = store.application_fee_multiplier || this.options_.default_application_fee_multiplier;
     const intentRequest: Stripe.PaymentIntentCreateParams = {
       description,
       amount: Math.round(amount),
@@ -152,7 +155,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       ...intentRequestData,
       // capture_method: 'manual',
       on_behalf_of: accountId,
-      application_fee_amount: Math.round(amount * APPLICATION_FEE_PERCENTAGE),
+      application_fee_amount: Math.round(amount * (multiplier)),
       transfer_data: {
         destination: accountId,
       },

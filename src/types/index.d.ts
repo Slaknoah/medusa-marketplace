@@ -20,6 +20,7 @@ export declare module "@medusajs/medusa/dist/models/store" {
   declare interface Store {
     c_stripe_account_id: string;
     c_stripe_account_enabled: boolean;
+    application_fee_multiplier: number;
   }
 }
 
