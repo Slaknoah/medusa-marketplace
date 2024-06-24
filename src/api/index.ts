@@ -21,6 +21,10 @@ class StoreGetProductsParams extends MedusaStoreGetProductsParams {
   @IsString()
   @IsOptional()
   store_id?: string;
+  
+  @IsString()
+  @IsOptional()
+  options?: string;
 }
 
 registerOverriddenValidators(StoreGetProductsParams)

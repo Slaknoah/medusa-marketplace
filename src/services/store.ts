@@ -1,8 +1,9 @@
-import { FindConfig, Store, User, buildQuery } from "@medusajs/medusa";
+import { FindConfig, Selector, Store, User, buildQuery } from "@medusajs/medusa";
 import { MedusaError } from "medusa-core-utils";
 import { Lifetime } from "awilix"
 
 import { StoreService as MedusaStoreService } from "@medusajs/medusa";
+import { FindOptionsWhere, ILike } from "typeorm";
 
 class StoreService extends MedusaStoreService {
   // The default life time for a core service is SINGLETON
@@ -20,6 +21,58 @@ class StoreService extends MedusaStoreService {
     } catch (e) {
       // avoid errors when backend first runs
     }
+  }
+
+  async listAndCount(
+    selector?: Selector<Store> & {
+      q?: string
+    },
+    config: FindConfig<Store> = {
+      skip: 0,
+      take: 20,
+      relations: [],
+      order: { created_at: "DESC" },
+  }): Promise<[Store[], number]> {
+    const storeRepo = this.activeManager_.withRepository(
+      this.storeRepository_
+    )
+
+    const { q, ...storeSelector } = selector
+
+    const query = buildQuery(storeSelector, config)
+    query.where = query.where as FindOptionsWhere<Store>
+
+    if (q) {
+      query.where.name = ILike(`%${q}%`)
+    }
+
+    return storeRepo.findAndCount(query)
+  }
+
+  async list(
+    selector?: Selector<Store> & {
+      q?: string
+    },
+    config: FindConfig<Store> = {
+      skip: 0,
+      take: 20,
+      relations: [],
+      order: { created_at: "DESC" },
+  }): Promise<Store[]> {
+    const storeRepo = this.activeManager_.withRepository(
+      this.storeRepository_
+    )
+
+    const { q, ...storeSelector } = selector
+
+    const query = buildQuery(storeSelector, config)
+    query.where = query.where as FindOptionsWhere<Store>
+
+    if (q) {
+      query.where.name = ILike(`%${q}%`)
+    }
+
+    return storeRepo.find(query)
   }
 
   /**

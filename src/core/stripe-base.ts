@@ -308,7 +308,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
   async updatePayment(
     context: PaymentProcessorContext
   ): Promise<PaymentProcessorError | PaymentProcessorSessionResponse | void> {
-    const { amount, customer, paymentSessionData } = context
+    const { amount, customer, paymentSessionData, resource_id } = context
     const stripeId = customer?.metadata?.stripe_id
 
     if (stripeId !== paymentSessionData.customer) {
@@ -328,8 +328,31 @@ abstract class StripeBase extends AbstractPaymentProcessor {
 
       try {
         const id = paymentSessionData.id as string
+
+        // Remove shipping fee before transfering
+        const cart = await this.cartService.retrieve(resource_id, {
+          relations: ['shipping_methods', 'items.variant.product.store'],
+        })
+        const store = cart?.items?.[0]?.variant?.product?.store as Store;
+        const multiplier = store.application_fee_multiplier || this.options_.default_application_fee_multiplier;
+        const shippingPrice = cart.shipping_methods.reduce((acc, curr) => acc + curr.price, 0)
+        const subTotal = amount - shippingPrice;
+        const applicationFee = subTotal * multiplier;
+
+        // Update transfer data
         const sessionData = (await this.stripe_.paymentIntents.update(id, {
           amount: Math.round(amount),
+          // Transfer data
+          application_fee_amount: null,
+          transfer_data: {
+              amount: subTotal - applicationFee,
+          },
+          metadata: {
+              ...((paymentSessionData.metadata as any) || {}),
+              shipping_price: shippingPrice,
+              application_fee: applicationFee,
+              sub_total: subTotal,
+          },
         })) as unknown as PaymentProcessorSessionResponse["session_data"]
 
         return { session_data: sessionData }
