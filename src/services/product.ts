@@ -1,7 +1,5 @@
 import { Lifetime } from "awilix";
 import {
-  buildQuery,
-  ExtendedFindConfig,
   ProductService as MedusaProductService,
   Product,
   User,
@@ -10,9 +8,7 @@ import {
   CreateProductInput as MedusaCreateProductInput,
   ProductSelector as MedusaProductSelector,
   FindProductConfig,
-  ProductFilterOptions,
 } from "@medusajs/medusa/dist/types/product";
-import { In } from "typeorm";
 
 type CreateProductInput = {
   store_id?: string;
@@ -83,33 +79,7 @@ class ProductService extends MedusaProductService {
       selector.store_id = this.loggedInUser_.store_id;
     }
 
-    const productRepo = this.activeManager_.withRepository(
-      this.productRepository_
-    )
-
-    const { q, options, ...productSelector } = selector
-    const query = buildQuery(productSelector, config) as ExtendedFindConfig<
-      Product & ProductFilterOptions
-    >
-    
-    // Filter by options
-    if (options) {
-      const optionFiltersArr = options.split('&')
-      query.where = {
-        ...query.where,
-        options: optionFiltersArr.map((filter) => {
-          const [title, values] = filter.split(':')
-          return {
-            title,
-            values: {
-              value: In(values.split(',')),
-            },
-          }
-        }),
-      }
-    }
-
-    return await (productRepo as any).findAndCount(query, q);
+    return await super.listAndCount(selector, config);
   }
 
   async create(productObject: CreateProductInput): Promise<Product> {
