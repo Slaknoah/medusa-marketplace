@@ -1,6 +1,6 @@
 {
   "name": "medusa-plugin-marketplace",
-  "version": "0.0.30",
+  "version": "0.0.35",
   "description": "Marketplace extension for Medusa JS.",
   "author": "Salako Noah Inioluwa <slaknoah@gmail.com>",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "start:server": "cross-env node --preserve-symlinks --trace-warnings index.js",
     "start:custom": "cross-env npm run build && node --preserve-symlinks --trace-warnings index.js",
     "dev": "cross-env npm run build:server && medusa develop",
-    "migrate": "cross-env medusa migrations run",
+    "migrate": "cross-env npm run build && medusa migrations run",
     "dev:admin": "medusa-admin develop"
   },
   "dependencies": {
