@@ -283,6 +283,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       await this.stripe_.refunds.create({
         amount: Math.round(refundAmount),
         payment_intent: id as string,
+        reverse_transfer: true,
       })
     } catch (e) {
       return this.buildError("An error occurred in refundPayment", e)
