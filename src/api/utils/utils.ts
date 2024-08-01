@@ -133,12 +133,13 @@ async function onPaymentIntentSucceeded({
         container,
       })
     } else {
-      await completeCartIfNecessary({
-        eventId,
-        cartId,
-        container,
-        transactionManager,
-      })
+      // Relying on completing cart from frontend (as it causes conflic with cart completion)
+      // await completeCartIfNecessary({
+      //   eventId,
+      //   cartId,
+      //   container,
+      //   transactionManager,
+      // })
 
       await capturePaymentIfNecessary({
         cartId,
@@ -198,6 +199,14 @@ async function capturePaymentIfNecessary({
   const order = await orderService
     .retrieveByCartId(cartId)
     .catch(() => undefined)
+  
+  // Throw error and wait for next webhook if order is not created yet
+  if (!order) {
+    throw new MedusaError(
+      MedusaError.Types.NOT_FOUND,
+      `Order not created cart ${cartId} yet`
+    )
+  }
 
   if (order && order?.payment_status !== "captured") {
     await orderService
