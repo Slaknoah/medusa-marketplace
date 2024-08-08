@@ -145,18 +145,52 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       this.options_?.payment_description) as string
 
     const multiplier = store.application_fee_multiplier || this.options_.default_application_fee_multiplier;
+
+    // Remove shipping from transaction
+    const response = await this.cartService.retrieveWithTotals(resource_id, {
+      relations: ["shipping_methods", "shipping_methods.shipping_option"]
+    })
+    const total = amount;
+    // Update payment intent transfer amount
+    const isManualShipping = response.shipping_methods.some((sm) => sm.shipping_option.provider_id === "manual")
+
+    const shippingPrice = isManualShipping ? 0 : response.shipping_methods.reduce((acc, curr) => acc + curr.price, 0)
+    // Shipping price to remove from payment intent amount
+    const appliedShippingPrice = isManualShipping ? 0 : response.shipping_methods.reduce((acc, curr) => acc + curr.price, 0)
+
+    
+    if (total - appliedShippingPrice < 0) {
+        throw new MedusaError(
+            MedusaError.Types.INVALID_DATA,
+            "Shipping cost exceeds payment intent amount"
+        )
+    }
+
+    const subTotal = total - appliedShippingPrice;
+    const applicationFee = Math.round(subTotal * multiplier);
+    const storePrice = subTotal - applicationFee;
+    
+
     const intentRequest: Stripe.PaymentIntentCreateParams = {
       description,
       amount: Math.round(amount),
       currency: currency_code,
-      metadata: { resource_id },
+      metadata: { 
+        resource_id,
+        shipping_price: shippingPrice,
+        applied_shipping_price: appliedShippingPrice,
+        application_fee: applicationFee,
+        sub_total: subTotal,
+        store_price: storePrice,
+      },
       // We do this post payment cloning so capturing happens afterwards
       capture_method: this.options_.capture ? "automatic" : "manual",
       ...intentRequestData,
       // capture_method: 'manual',
       on_behalf_of: accountId,
-      application_fee_amount: Math.round(amount * (multiplier)),
+      // application_fee_amount: Math.round(amount * (multiplier)),
       transfer_data: {
+        amount: storePrice,
         destination: accountId,
       },
     }
@@ -280,12 +314,85 @@ abstract class StripeBase extends AbstractPaymentProcessor {
     const id = paymentSessionData.id as string
 
     try {
+      const paymentIntent = await this.stripe_.paymentIntents.retrieve(id, {
+        expand: ["latest_charge", "latest_charge.balance_transaction"],
+      })
+
+      const cart = await this.cartService.retrieve((paymentIntent.metadata as any)?.resource_id, {
+        relations: ["items.tax_lines"]
+      })
+
+      if (!cart) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          "Cart not found"
+        )
+      }
+
+      if (!paymentIntent.latest_charge) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          "No charge found"
+        )
+      }
+
+      // console.log(paymentIntent)
+      const storePrice = paymentIntent.transfer_data.amount ?? parseInt(((paymentIntent.metadata as any)?.store_price || '0'), 10) as number;
+      const stripeFee = ((paymentIntent.latest_charge as Stripe.Charge)?.balance_transaction as Stripe.BalanceTransaction)?.fee;
+      const transferId = (paymentIntent.latest_charge as Stripe.Charge)?.transfer as string;
+
+      // Is shipping price of seller refundable if not we need to remove it from the refund amount
+      const appliedShipping = parseInt(((paymentIntent.metadata as any)?.applied_shipping_price || '0'), 10);
+      const shipping = cart.shipping_total || parseInt(((paymentIntent.metadata as any)?.shipping_price || '0'), 10);
+
+      const totalPaid = paymentIntent.amount;
+      const maxRefundable = totalPaid - stripeFee - shipping;
+
+      if (refundAmount > maxRefundable) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "Refund amount exceeds max refundable amount"
+        )
+      }
+
+      // If seller took shipping we need to remove from the seller price before computing percentage
+      const storeBase = (appliedShipping === 0 && shipping > 0) ? storePrice - shipping : storePrice;
+      const reversedTransfer = (storeBase / maxRefundable) * refundAmount;
+      const applicationRefund = refundAmount - reversedTransfer;
+
+      const refundsMetadata = {
+        reversedTransfer, 
+        totalPaid, 
+        storePrice, 
+        refundAmount, 
+        transferId,
+        stripeFee, 
+        shipping, 
+        maxRefundable,
+        applicationRefund,
+        appliedShipping,
+        storeBase,
+      }
+      console.log(refundsMetadata);
+
+      const transferReversal = await this.stripe_.transfers.createReversal(
+        transferId,
+        {
+          amount: reversedTransfer,
+          metadata: refundsMetadata,
+        }
+      );
+
       await this.stripe_.refunds.create({
         amount: Math.round(refundAmount),
         payment_intent: id as string,
-        reverse_transfer: true,
+        metadata: {
+          ...refundsMetadata,
+          reversedTransferId: transferReversal.id,
+        },
       })
     } catch (e) {
+      console.log(e);
       return this.buildError("An error occurred in refundPayment", e)
     }
 
@@ -330,6 +437,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       try {
         const id = paymentSessionData.id as string
 
+        // TODO: implemenent shipping deduction
         // Remove shipping fee before transfering
         // const cart = await this.cartService.retrieve(resource_id, {
         //   relations: ['shipping_methods', 'items.variant.product.store'],
