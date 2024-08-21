@@ -66,6 +66,17 @@ export async function connectStripe(req) {
     const account = await stripeBase.createStoreAccount(user, {
       ...stripeOptions,
       business_type: req.body.business_type || "individual",
+      settings: {
+        ...(stripeOptions.settings || {}),
+        branding: { secondary_color: "#BE0000" },
+        payouts: {
+          ...(stripeOptions?.settings?.payouts || {}),
+          schedule: {
+            delay_days: 10,
+            interval: "daily"
+          },
+        },
+      },
     })
   
     // Save account id to store

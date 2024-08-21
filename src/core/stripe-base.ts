@@ -36,7 +36,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
     this.options_ = options.stripe || options.projectConfig.stripe;
     this.cartService = _.cartService
     this.lineItemService = _.lineItemService
-    this.options_.default_application_fee_multiplier = this.options_.default_application_fee_multiplier || APPLICATION_FEE_PERCENTAGE
+    this.options_.default_application_fee_multiplier = this.options_.default_application_fee_multiplier ?? APPLICATION_FEE_PERCENTAGE
 
     this.init()
   }
@@ -144,7 +144,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
     const description = (cart_context.payment_description ??
       this.options_?.payment_description) as string
 
-    const multiplier = store.application_fee_multiplier || this.options_.default_application_fee_multiplier;
+    const multiplier = store.application_fee_multiplier ?? this.options_.default_application_fee_multiplier;
 
     // Remove shipping from transaction
     const response = await this.cartService.retrieveWithTotals(resource_id, {
