@@ -19,6 +19,8 @@ class StripeProviderService extends StripeBase {
     console.log("Migrating accounts")
     const storesWithStripe = await this.storeService.list({
       c_stripe_account_id: Not(IsNull()),
+    }, {
+      take: 1000,
     })
     // console.log(storesWithStripe.length)
     const updates = storesWithStripe.map(async (store) => {
@@ -36,6 +38,7 @@ class StripeProviderService extends StripeBase {
       )
     })
     await Promise.all(updates)
+    console.log("Migrated accounts", updates.length)
   }
 
   get paymentIntentOptions(): PaymentIntentOptions {

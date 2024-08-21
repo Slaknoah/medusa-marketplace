@@ -72,8 +72,7 @@ export async function connectStripe(req) {
         payouts: {
           ...(stripeOptions?.settings?.payouts || {}),
           schedule: {
-            delay_days: 10,
-            interval: "daily"
+            interval: "manual",
           },
         },
       },
