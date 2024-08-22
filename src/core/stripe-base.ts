@@ -269,6 +269,22 @@ abstract class StripeBase extends AbstractPaymentProcessor {
         id
       )) as unknown as PaymentProcessorSessionResponse["session_data"]
     } catch (error) {
+      // TODO: Figure out charging the seller for the associated stripe fee
+      // If cancel fails due to succeeded payment do a full refund with reversal
+      if (error.code === ErrorCodes.PAYMENT_INTENT_UNEXPECTED_STATE && error.payment_intent?.status === ErrorIntentStatus.SUCCEEDED) {
+        const payment_intent = error.payment_intent;
+        await this.stripe_.refunds.create({
+          payment_intent: payment_intent.id as string,
+          reverse_transfer: true,
+          metadata: {
+            ...((paymentSessionData.metadata as any) || {}),
+            refund_reason: "cancel",
+          },
+        });
+
+        return payment_intent;
+      }
+
       if (error.payment_intent?.status === ErrorIntentStatus.CANCELED) {
         return error.payment_intent
       }
