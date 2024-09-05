@@ -1,6 +1,6 @@
 {
   "name": "medusa-plugin-marketplace",
-  "version": "0.0.45",
+  "version": "0.0.47",
   "description": "Marketplace extension for Medusa JS.",
   "author": "Salako Noah Inioluwa <slaknoah@gmail.com>",
   "license": "MIT",

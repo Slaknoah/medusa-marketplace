@@ -394,7 +394,7 @@ abstract class StripeBase extends AbstractPaymentProcessor {
       const transferReversal = await this.stripe_.transfers.createReversal(
         transferId,
         {
-          amount: reversedTransfer,
+          amount: Math.round(reversedTransfer),
           metadata: refundsMetadata,
         }
       );
